@@ -46,10 +46,13 @@ class GD(ModelOptimimizer):
         self._loss.model.weight  = self._loss.model.weight - lr*d_loss
         return self
     
+    def _estimate_epoch(self,data):
+        self._loss.estimate(data[0],data[1])
+
     def _fit_epoch(self,data_train,data_val,): 
         lr = self._lra.next()
         self._adjust_weigth(data_train,lr) # обучаем модель
-        self._loss.estimate(data_val[0],data_val[1])
+        self._estimate_epoch(data_val)
         return self
 
     def fit(self,data_train,data_val=None,n_epoch=2): 
@@ -89,6 +92,12 @@ class SGD(GD):
             super()._adjust_weigth( self._batch_transform(batch_data),lr) # обучаем модель на батче
         return self
     
+    # FIXME: нужно получить общую оценку эпохи
+    def _estimate_epoch(self,data): 
+        for batch_data in self._get_batch(data):
+            super()._estimate_epoch( self._batch_transform(batch_data) )
+        return self
+
     def fit(self,data_train,batch_size, data_val=None,n_epoch=2,target_is_indices=False,batch_transform=None):
         assert (batch_size>0), 'batch_size less zero'
         # assert (batch_size<data_tarin[1]), 'batch_size more than target len'
