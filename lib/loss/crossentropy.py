@@ -24,7 +24,7 @@ class BCE(Loss): # BinaryCrossEntropy
         assert (output.shape==target.shape),f'incompatible shape output {output.shape} and target {target.shape}'
         t = target.flatten()
         o = output.flatten()
-        with np.errstate(invalid='ignore'):
+        with np.errstate(divide='ignore',invalid='ignore'):
             lg1 = np.where( o>0, np.log(o), 0. )
             lg2 = np.where( (1.-o)>0, np.log(1.-o), 0. )
         ce = -( t*lg1+(1.-t)*lg2 )
@@ -47,7 +47,7 @@ class CCE(Loss): # CategoricalCrossEntropy
     def _estimate(self,output,target):
         o = output.flatten()
         t = target.flatten()
-        with np.errstate(invalid='ignore'):
+        with np.errstate(divide='ignore',invalid='ignore'):
             lg = np.where(o>0., np.log(o), 0.)
         return t.dot( lg.T )/len(target)
 
