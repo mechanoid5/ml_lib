@@ -2,7 +2,7 @@
 
 Евгений Борисов <esborisov@sevsu.ru>
 
-## модели
+### модели
 
 - lib.model.base.MLModel - базовый класс
 - lib.model.linear.LinearModel - линейная модель
@@ -11,7 +11,7 @@
 - lib.model.linear.Softmax 
 
 
-## ф-ции потери
+### ф-ции потери
 
 - lib.loss.base.Loss - базовый класс
 - lib.loss.msqe.MSQE - среднее квадратичное отклонение
@@ -20,7 +20,7 @@
 - lib.loss.ranker.PairRankerLoss - оценка разницы скоров для задачи парного ранжирования
 
 
-## инициализация параметров моделей
+### инициализация параметров моделей
 
 - lib.initiator.base.InitiatorModel - базовый класс
 - lib.initiator.linear.InitiatorLinearModel - инициализация линейной модели
@@ -29,7 +29,7 @@
 
 
 
-## методы оптимизации ф-ций потери
+### методы оптимизации ф-ций потери
 
 - lib.optimizer.base.ModelOptimimizer - базовый класс
 - lib.optimizer.gd.BaseGD - "ванильный" градиентный спуск
@@ -37,21 +37,21 @@
 - lib.optimizer.gd.SGD - стохастический градиентный спуск
 
 
-## регуляризаторы для градиентного спуска
+### регуляризаторы для градиентного спуска
 
 - lib.optimizer.regularizator.Regularization - базовый класс
 - lib.optimizer.regularizator.RegularizationL1 - L1 регуляризатор
 - lib.optimizer.regularizator.RegularizationL2 - L2 регуляризатор
 
 
-## изменение скорости обучения в процессе градиентного спуска
+### изменение скорости обучения в процессе градиентного спуска
 
 - lib.optimizer.lrate.LearningRateAdjuster - базовый класс
 - lib.optimizer.lrate.ConstLRA - постоянная скорость обучения
 - lib.optimizer.lrate.FactorLRA - убывающая скорость обучения
 
 
-## прерывание цикла обучения при выполнении условия
+### прерывание цикла обучения при выполнении условия
 
 - lib.optimizer.breaker.Breaking - базовый класс
 - lib.optimizer.breaker.EarlyStopping - прерывание по достижению порога значения потери
@@ -59,6 +59,6 @@
 
 
 
-## оценка результатов моделей 
+### оценка результатов моделей 
 
 - lib.estimator.classifier.ClassifierEstimator - оценка результатов классификатора
