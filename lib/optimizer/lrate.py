@@ -36,8 +36,8 @@ class ConstLRA(LearningRateAdjuster):
 
 class FactorLRA(LearningRateAdjuster):
 
-    def __init__(self,value,bound,factor):
-        super().__init__(value)
+    def __init__(self,start,bound,factor):
+        super().__init__(start)
         assert factor!=0, 'try set zero learning rate factor'
         self._bound = bound
         self._factor = factor

@@ -10,35 +10,24 @@ import logging
 
 import numpy as np
 import numpy.random as rng
-# import pickle
-# import gzip
 from tqdm import tqdm
 
-
 from .base import ModelOptimimizer
-
 from .lrate import ConstLRA
+from .regularizator import Regularization
+# from .regularizator import RegularizationL1
+# from .breaker import EarlyStopping
+from .breaker import FitBreakException
+from .breaker import Breaking
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class EarlyStopping:
+class BaseGD(ModelOptimimizer):
 
-    def __init__( self, min_delta, patience):
-        self._min_delta=min_delta
-        self._patience=patience
-
-    def estimate(self,loss):
-        if len(loss.history)<(self._patience): return False
-        return (loss.history[-1]-loss.history[-self._patience])<self._min_delta
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-class GD(ModelOptimimizer):
-
-    def __init__(self,loss,lra=ConstLRA(.1),es=None):
+    def __init__(self,loss,lra=ConstLRA(.1),breaker=Breaking()):
         super().__init__(loss=loss)
         self._lra = lra
-        self._es = es
+        self._breaker = breaker
 
     def _adjust_weigth(self,data,lr):
         x,t = data
@@ -55,26 +44,56 @@ class GD(ModelOptimimizer):
         self._estimate_epoch(data_val)
         return self
 
-    def fit(self,data_train,data_val=None,n_epoch=2): 
+    def _fit(self,data_train,data_val,n_epoch): 
         data_val = data_train if data_val is None else data_val
         epoch = tqdm(range(n_epoch))
         for _ in epoch:
             self._fit_epoch(data_train,data_val)
             epoch.set_postfix({'loss':self._loss.history[-1], 'lr':self._lra.history[-1],})
-            if not self._es is None: 
-                if self._es.estimate(self._loss):
-                    break
+            self._breaker.check(self._loss)
+        return self
 
-        return self._loss.history,self._lra.history
+    def fit(self,data_train,data_val=None,n_epoch=2): 
+        try:
+            self._fit(data_train=data_train,data_val=data_val,n_epoch=n_epoch) 
+        except FitBreakException as break_reason:
+            logging.info(break_reason)
+        #except Exception as err:
+        #    logging.error(err)
+
+        return self._loss.model
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class GD(BaseGD):
+
+    def __init__(self,loss,lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
+        super().__init__(loss=loss,lra=lra,breaker=breaker)
+        self._regularizator = regul # регуляризатор
+        self._dweight = 0. # значения изменения весов на пред. шаге для расчёта момента
+        self._momentum = momentum # коэффициент момента
+    
+    def _adjust_weigth(self,data,lr):
+        x,t = data
+        d_loss = self._loss.gradient(x,t) # значение градиента ф-ции потери
+        dweight =(
+                lr*( 
+                    d_loss # значение градиента ф-ции потери
+                    * self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
+                    ) 
+                    + self._momentum * self._dweight # добавка момента
+                )
+        self._loss.model.weight  = ( self._loss.model.weight - dweight )
+        self._dweight = dweight
+
+        return self
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class SGD(GD):
     
-    def __init__(self,loss,lra=ConstLRA(.1),es=None):
-        super().__init__(loss=loss,lra=lra,es=es)
+    def __init__(self,loss,lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
+        super().__init__(loss=loss,lra=lra,breaker=breaker,regul=regul,momentum=momentum)
         self._batch_size=0
         self._target_is_indices=False
-        self._batch_transform = lambda d: d
     
     def _select_data(self,data,idx):
         if self._target_is_indices : return data[0],data[1][idx,:] 
@@ -89,21 +108,14 @@ class SGD(GD):
 
     def _adjust_weigth(self,data,lr):
         for batch_data in self._get_batch(data):
-            super()._adjust_weigth( self._batch_transform(batch_data),lr) # обучаем модель на батче
+            super()._adjust_weigth( batch_data,lr) # обучаем модель на батче
         return self
-    
-    # FIXME: нужно получить общую оценку эпохи
-    def _estimate_epoch(self,data): 
-        for batch_data in self._get_batch(data):
-            super()._estimate_epoch( self._batch_transform(batch_data) )
-        return self
-
-    def fit(self,data_train,batch_size, data_val=None,n_epoch=2,target_is_indices=False,batch_transform=None):
+  
+    def fit(self, data_train, batch_size, data_val=None, n_epoch=2, target_is_indices=False ):
         assert (batch_size>0), 'batch_size less zero'
         # assert (batch_size<data_tarin[1]), 'batch_size more than target len'
         self._batch_size=batch_size
         self._target_is_indices=target_is_indices
-        if hasattr(batch_transform, '__call__'): self._batch_transform = batch_transform
         return super().fit(data_train=data_train, data_val=data_val, n_epoch=n_epoch)
 
 
