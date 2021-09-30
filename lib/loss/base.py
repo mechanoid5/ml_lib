@@ -17,7 +17,7 @@ class Loss:
         assert not(model is None), 'try estimate empty model'
         self._model = model
         self._history = []
-                
+
     def estimate(self,input_data,target):
         s = self._estimate(self._model.predict(input_data), target)
         self._history.append(s)
