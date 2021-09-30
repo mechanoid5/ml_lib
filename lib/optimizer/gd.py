@@ -45,6 +45,7 @@ class BaseGD(ModelOptimimizer):
         return self
 
     def _fit(self,data_train,data_val,n_epoch): 
+        # self._loss.model.reset()
         data_val = data_train if data_val is None else data_val
         epoch = tqdm(range(n_epoch))
         for _ in epoch:
@@ -58,8 +59,8 @@ class BaseGD(ModelOptimimizer):
             self._fit(data_train=data_train,data_val=data_val,n_epoch=n_epoch) 
         except FitBreakException as break_reason:
             logging.info(break_reason)
-        #except Exception as err:
-        #    logging.error(err)
+        except Exception as err:
+            logging.error(err)
 
         return self._loss.model
 

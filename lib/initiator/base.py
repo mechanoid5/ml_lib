@@ -10,19 +10,12 @@ import logging
 
 # import numpy as np
 # import numpy.random as rng
-# import pickle
-# import gzip
-# from tqdm import tqdm
 
 
-class ModelOptimimizer:
-    
-    def __init__(self,loss):
-        assert not(loss is None), 'try optimize empty loss'
-        self._loss = loss
-               
-    def fit(self,data,n_epoch=2): pass
-   
+class InitiatorModel:
+
+    def get(self): pass
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)

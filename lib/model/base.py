@@ -18,8 +18,23 @@ import numpy.random as rng
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class MLModel:
         
-    def __init__(self):
-        self._weight = None # вектор весов
+    def __init__(self,initiator):
+        self._weight = None # параметры модели
+        self._initiator = initiator
+        self._weight = None
+        self._reset()
+
+    @property
+    def weight(self): return self._weight
+
+    @weight.setter
+    def weight(self, value): self._weight = value         
+
+    def _reset(self): pass
+
+    def reset(self):
+        self._reset()
+        return self
 
     def predict(self,x):
         assert not(self._weight is None), 'try predict with empty weight'
@@ -42,7 +57,6 @@ class MLModel:
     
     def __partial(self,x): pass # вектор частных производных по параметрам модели
     
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)
