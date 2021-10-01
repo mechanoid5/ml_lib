@@ -45,12 +45,10 @@ class PairRankerLoss(Loss):
     def _gradient(self,x_first,x_second):
         margin = self._model.score(x_first) - self._model.score(x_second)
         dmargin = self._model._partial(x_first) - self._model._partial(x_second)
-        
-        d = 1. + np.exp( self._sigma * margin ) 
+        d = 1. + np.exp( self._sigma * margin )[:,np.newaxis]
         with np.errstate(divide='ignore',invalid='ignore',):
             g = np.where( d!=0, (-self._sigma/d)*dmargin, 0. )
-          
-        return self._norm( g.sum(axis=0)/len(g)) [:,np.newaxis]
+        return self._norm( g.sum(axis=0)/len(g))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)

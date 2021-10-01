@@ -14,7 +14,6 @@
 
 - lib.loss.base.Loss - базовый класс
 - lib.loss.msqe.MSQE - среднее квадратичное отклонение
-- lib.loss.crossentropy.BCE - кроссэнтропия
 - lib.loss.crossentropy.CCE - категориальная кроссэнтропия
 - lib.loss.ranker.PairRankerLoss - оценка разницы скоров для задачи парного ранжирования
 
@@ -62,4 +61,5 @@
 
 - lib.estimator.classifier.ClassifierEstimator - оценка результатов классификатора
 - lib.estimator.classifier.BinnaryClassifierScoreThreshold - подбор оптимального порога скора модели для разделения двух классов
+- lib.estimator.loss.LossPlot
 

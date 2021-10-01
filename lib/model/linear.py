@@ -44,7 +44,11 @@ class LinearModel(MLModel): # линейная модель
     
     @staticmethod
     def _act_derivative(s): # производная функция активации по её аргументу
-        return np.ones(size=s.shape)
+        return np.ones(s.shape)
+
+    @property
+    def shape(self): return self._weight.shape
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -54,9 +58,11 @@ class LinearClassifier(LinearModel): # линейный классификато
         super().__init__(initiator) # инициализируем параметры с помощью процедуры initiator
         self._score_threshold = None
     
-    def _predict(self,x):
-        o = self._score(x)
+    def _solve_score(self,o):
         return (o>self._score_threshold).astype(int) if (o.shape[1]==1) else np.argmax(o,axis=1)
+
+    def _predict(self,x):
+        return self._solve_score( self._score(x) ) 
 
     def _save(self): # пакуем параметры модели
         return {'weight':self._weight,'score_threshold':self._score_threshold,}
@@ -83,6 +89,8 @@ class SLP(LinearClassifier): # однослойная нейросеть
     def _act_derivative(cls,s): # sigmoid derivative
         o = cls._act(s)
         return o*(1.-o)
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class Softmax(LinearClassifier): 
