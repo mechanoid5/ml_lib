@@ -20,14 +20,17 @@ from .regularizator import Regularization
 from .breaker import FitBreakException
 from .breaker import Breaking
 
+from lib.loss.base import EmptyLoss
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class BaseGD(ModelOptimimizer):
 
-    def __init__(self,loss,lra=ConstLRA(.1),breaker=Breaking()):
+    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=Breaking()):
         super().__init__(loss=loss)
         self._lra = lra
         self._breaker = breaker
+        assert (loss!=loss_val), "train loss and validation loss is same object"
+        self._loss_val = loss_val
 
     def _adjust_weigth(self,data,lr):
         x,t = data
@@ -35,13 +38,15 @@ class BaseGD(ModelOptimimizer):
         self._loss.model.weight  = self._loss.model.weight - lr*d_loss
         return self
     
-    def _estimate_epoch(self,data):
-        self._loss.estimate(data[0],data[1])
+    def _estimate_epoch(self,data_train,data_val):
+        self._loss.estimate(data_train[0],data_train[1])
+        self._loss_val.estimate(data_val[0],data_val[1])
+        return self
 
     def _fit_epoch(self,data_train,data_val,): 
         lr = self._lra.next()
         self._adjust_weigth(data_train,lr) # обучаем модель
-        self._estimate_epoch(data_val)
+        self._estimate_epoch(data_train,data_val)
         return self
 
     def _fit(self,data_train,data_val,n_epoch): 
@@ -67,8 +72,8 @@ class BaseGD(ModelOptimimizer):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class GD(BaseGD):
 
-    def __init__(self,loss,lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
-        super().__init__(loss=loss,lra=lra,breaker=breaker)
+    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
+        super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker)
         self._regularizator = regul # регуляризатор
         self._dweight = 0. # значения изменения весов на пред. шаге для расчёта момента
         self._momentum = momentum # коэффициент момента
@@ -91,8 +96,8 @@ class GD(BaseGD):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class SGD(GD):
     
-    def __init__(self,loss,lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
-        super().__init__(loss=loss,lra=lra,breaker=breaker,regul=regul,momentum=momentum)
+    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
+        super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker,regul=regul,momentum=momentum)
         self._batch_size=0
         self._target_is_indices=False
     

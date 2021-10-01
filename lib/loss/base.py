@@ -43,6 +43,19 @@ class Loss:
         amax = np.abs(x).max()
         return x if amax==0. else x/amax
 
+
+class EmptyLoss(Loss):
+
+    def __init__(self): pass
+
+    def estimate(self,input_data,target): pass
+    
+    def gradient(self,input_data,target): pass
+
+
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)
 

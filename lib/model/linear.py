@@ -10,60 +10,49 @@ import logging
 
 import numpy as np
 import numpy.random as rng
-# import pickle
-# import gzip
-# from tqdm import tqdm
 
 from .base import MLModel
 
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class LinearModel(MLModel): # линейная модель
 
-    def __init__(self,initiator): # ,n_features=0,n_out=0):
-        super().__init__(initiator)
+    def __init__(self,initiator):
+        super().__init__(initiator) # инициализируем параметры с помощью процедуры initiator
 
-    def _reset(self):
+    def _reset(self): # процедура инициализации генерирует начальные веса модели
         self._weight = self._initiator.get()
         return self    
-
-    def _state(self,x): 
-        return x.dot(self._weight)
     
-    def _predict(self,x): 
+    def _predict(self,x): # выход модели
         return self._act( self._state(x) )    
 
-    def _partial(self,x): 
-        return self._act_derivative( self._state(x) )*x 
-        # return self._act_derivative( self._state(x) )[:,np.newaxis]*x   
+    def _state(self,x): # состояние модели
+        return x.dot(self._weight)
+   
+    def _partial(self,x): # частные производные по параметрам модели для применения градиентных методов 
+        act_d = self._act_derivative( self._state(x) )[:,np.newaxis]
+        state_d = self._state_derivative(x)[:,np.newaxis]
+        state_d = np.swapaxes(state_d,1,2)
+        return np.matmul( state_d, act_d )
+
+        # return self._act_derivative( self._state(x) )*self._state_derivative(x) 
+        # return self._act_derivative( self._state(x) ).dot(self._weight.T)
+        # return x.T.dot( self._act_derivative( self._state(x) ) )
+
+    def _state_derivative(self,x): # производная функции состояния по параметрам модели
+        return x
      
     @staticmethod
-    def _act(s): return s # linear
+    def _act(s): # функция активации состояния
+        return s # линейная 
     
     @staticmethod
-    def _act_derivative(s): return np.array([1])
+    def _act_derivative(s): # производная функция активации по её аргументу
+        return np.ones(size=s.shape)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class LinearRegression(LinearModel): # линейная регрессия
-   
-    def _reset(self):
-        w = self._initiator.get()
-        assert w.shape[1]==1, f'size output incorrect - {w.shape}'
-        self.weight = w
-        return self
-
-#     @property
-#     def weight(self): 
-#         return super().weight
-# 
-#     @weight.setter
-#     def weight(self, value): 
-#         assert value.shape[1]==1, f'size output incorrect - {value.shape}'
-#         super().weight = value
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class LogisticRegression(LinearRegression): # логистическая регрессия
+class SLP(LinearModel): # однослойная нейросеть
 
     @staticmethod
     def _act(s): 
@@ -74,28 +63,17 @@ class LogisticRegression(LinearRegression): # логистическая рег�
         o = cls._act(s)
         return o*(1.-o)
 
-
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class Softmax(LinearModel): 
 
     def _reset(self):
-        w =  self._initiator.get()
+        w =  self._initiator.get() # размер выхода softmax должен быть 2 или больше
         assert (w.shape[1]>1),f'softmax size output less 2 - {w.shape}'
         self.weight = w
         return self
 
-#     @property
-#     def weight(self): 
-#         return super().weight
-# 
-#     @weight.setter
-#     def weight(self, value): 
-#         assert (value.shape[1]>1),'softmax size output less 2'
-#         super().weight = value
-
     @staticmethod
-    def _act(s): 
+    def _act(s): # вычисляем softmax
         es = np.exp(s)
         ess = es.sum(axis=1)[:,np.newaxis]
         with np.errstate(invalid='ignore',divide='ignore'):
@@ -103,10 +81,43 @@ class Softmax(LinearModel):
         return o
     
     @classmethod
-    def _act_derivative(cls,s): # sigmoid derivative
+    def _act_derivative(cls,s): # производная softmax
         o = cls._act(s)
-        return o*(1.-o)
+        return o*(1.-o) # o*o
+        
+    # https://peterroelants.github.io/posts/cross-entropy-softmax/
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# class LogisticRegression(LinearModel): # логистическая регрессия
+# 
+#     def _reset(self):
+#         w = self._initiator.get()
+#         assert w.shape[1]==1, f'size output incorrect - {w.shape}'
+#         self.weight = w
+#         return self
+# 
+#     @staticmethod
+#     def _act(s): 
+#         return 1./(1.+np.exp(-s) ) # sigmoid
+#     
+#     @classmethod
+#     def _act_derivative(cls,s): # sigmoid derivative
+#         o = cls._act(s)
+#         return o*(1.-o)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# class LinearRegression(LinearModel): # линейная регрессия
+#    
+#     def _reset(self):
+#         w = self._initiator.get() 
+#         assert w.shape[1]==1, f'size output incorrect - {w.shape}'
+#         self.weight = w
+#         return self
+
 

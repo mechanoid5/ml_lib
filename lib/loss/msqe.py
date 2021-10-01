@@ -8,7 +8,7 @@
 
 import logging
 
-# import numpy as np
+import numpy as np
 # import numpy.random as rng
 
 from .base import Loss
@@ -21,9 +21,9 @@ class MSQE(Loss):
         return d.dot(d.T)/len(output)    
     
     def _gradient(self,input_data,target): 
-        d = self._model.predict(input_data)-target
+        d = (self._model.predict(input_data) - target)[:,np.newaxis,:]
         p = self._model._partial(input_data)
-        g = 2.*(p.T.dot(d))/len(p)
+        g = 2.*(p*d).sum(axis=0)/len(d)
         return self._norm(g)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
