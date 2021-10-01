@@ -21,7 +21,7 @@ class MSQE(Loss):
         return d.dot(d.T)/len(output)    
     
     def _gradient(self,input_data,target): 
-        d = (self._model.predict(input_data) - target)[:,np.newaxis,:]
+        d = (self._model.score(input_data) - target)[:,np.newaxis,:]
         p = self._model._partial(input_data)
         g = 2.*(p*d).sum(axis=0)/len(d)
         return self._norm(g)

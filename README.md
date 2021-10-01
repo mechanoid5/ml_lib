@@ -6,10 +6,9 @@
 
 - lib.model.base.MLModel - базовый класс
 - lib.model.linear.LinearModel - линейная модель
-- lib.model.linear.LinearRegression - линейная регрессия
-- lib.model.linear.LogisticRegression - логистическакя регрессия
+- lib.model.linear.LinearClassifier - линейный классификатор
+- lib.model.linear.SLP - однослойная нейросеть (сигмойда)
 - lib.model.linear.Softmax 
-
 
 ### ф-ции потери
 
@@ -62,3 +61,5 @@
 ### оценка результатов моделей 
 
 - lib.estimator.classifier.ClassifierEstimator - оценка результатов классификатора
+- lib.estimator.classifier.BinnaryClassifierScoreThreshold - подбор оптимального порога скора модели для разделения двух классов
+

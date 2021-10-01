@@ -23,7 +23,7 @@ class LinearModel(MLModel): # линейная модель
         self._weight = self._initiator.get()
         return self    
     
-      def _score(self,x): # генерируем выход модели
+    def _score(self,x): # генерируем выход модели
         return self._act( self._state(x) )    
 
     def _state(self,x): # состояние модели
@@ -52,21 +52,25 @@ class LinearClassifier(LinearModel): # линейный классификато
 
     def __init__(self,initiator):
         super().__init__(initiator) # инициализируем параметры с помощью процедуры initiator
-        self._score_bound = .0
-        self._class_labels = { 0:0, 1:1, } # номер выхода/порог : метка класса
-
+        self._score_threshold = None
+    
     def _predict(self,x):
-        o = self._score(self,x)
-        return (o>self._score_bound).astype(int) if (o.shape[1]==1) else np.argmax(o,axis=1)
+        o = self._score(x)
+        return (o>self._score_threshold).astype(int) if (o.shape[1]==1) else np.argmax(o,axis=1)
 
     def _save(self): # пакуем параметры модели
-        return {'weight':self._weight,'score_bound':self._score_bound,}
+        return {'weight':self._weight,'score_threshold':self._score_threshold,}
 
     def _load(self,data): # распаковываем считанные параметры модели
         self._weight = data['weight'] 
-        self._score_bound = data['score_bound'] 
+        self._score_threshold = data['score_threshold'] 
         return self    
 
+    @property
+    def score_threshold(self): return self._score_threshold
+
+    @score_threshold.setter
+    def score_threshold(self,value): self._score_threshold = value
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class SLP(LinearClassifier): # однослойная нейросеть

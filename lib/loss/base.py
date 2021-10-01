@@ -11,6 +11,7 @@ import logging
 import numpy as np
 # import numpy.random as rng
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class Loss:
 
     def __init__(self,model):
@@ -19,7 +20,7 @@ class Loss:
         self._history = []
 
     def estimate(self,input_data,target):
-        s = self._estimate(self._model.predict(input_data), target)
+        s = self._estimate(self._model.score(input_data), target)
         self._history.append(s)
         return s
         
@@ -44,6 +45,7 @@ class Loss:
         return x if amax==0. else x/amax
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class EmptyLoss(Loss):
 
     def __init__(self): pass

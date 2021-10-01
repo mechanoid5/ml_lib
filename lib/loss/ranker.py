@@ -23,8 +23,8 @@ class PairRankerLoss(Loss):
     def estimate(self,data,pair):
         first,second = pair[:,0],pair[:,1]
         s = self._estimate(
-            self._model.predict(data[first,:]), 
-            self._model.predict(data[second,:]), 
+            self._model.score(data[first,:]), 
+            self._model.score(data[second,:]), 
         )    
         self._history.append(s)
         return s
@@ -42,9 +42,8 @@ class PairRankerLoss(Loss):
         first,second = pair[:,0],pair[:,1]
         return self._gradient( data[first,:], data[second,:], )
             
-
     def _gradient(self,x_first,x_second):
-        margin = self._model.predict(x_first) - self._model.predict(x_second)
+        margin = self._model.score(x_first) - self._model.score(x_second)
         dmargin = self._model._partial(x_first) - self._model._partial(x_second)
         
         d = 1. + np.exp( self._sigma * margin ) 
