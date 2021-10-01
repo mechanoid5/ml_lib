@@ -23,7 +23,7 @@ class LinearModel(MLModel): # линейная модель
         self._weight = self._initiator.get()
         return self    
     
-    def _predict(self,x): # выход модели
+      def _score(self,x): # генерируем выход модели
         return self._act( self._state(x) )    
 
     def _state(self,x): # состояние модели
@@ -34,10 +34,6 @@ class LinearModel(MLModel): # линейная модель
         state_d = self._state_derivative(x)[:,np.newaxis]
         state_d = np.swapaxes(state_d,1,2)
         return np.matmul( state_d, act_d )
-
-        # return self._act_derivative( self._state(x) )*self._state_derivative(x) 
-        # return self._act_derivative( self._state(x) ).dot(self._weight.T)
-        # return x.T.dot( self._act_derivative( self._state(x) ) )
 
     def _state_derivative(self,x): # производная функции состояния по параметрам модели
         return x
@@ -52,7 +48,28 @@ class LinearModel(MLModel): # линейная модель
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class SLP(LinearModel): # однослойная нейросеть
+class LinearClassifier(LinearModel): # линейный классификатор
+
+    def __init__(self,initiator):
+        super().__init__(initiator) # инициализируем параметры с помощью процедуры initiator
+        self._score_bound = .0
+        self._class_labels = { 0:0, 1:1, } # номер выхода/порог : метка класса
+
+    def _predict(self,x):
+        o = self._score(self,x)
+        return (o>self._score_bound).astype(int) if (o.shape[1]==1) else np.argmax(o,axis=1)
+
+    def _save(self): # пакуем параметры модели
+        return {'weight':self._weight,'score_bound':self._score_bound,}
+
+    def _load(self,data): # распаковываем считанные параметры модели
+        self._weight = data['weight'] 
+        self._score_bound = data['score_bound'] 
+        return self    
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class SLP(LinearClassifier): # однослойная нейросеть
 
     @staticmethod
     def _act(s): 
@@ -64,7 +81,7 @@ class SLP(LinearModel): # однослойная нейросеть
         return o*(1.-o)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class Softmax(LinearModel): 
+class Softmax(LinearClassifier): 
 
     def _reset(self):
         w =  self._initiator.get() # размер выхода softmax должен быть 2 или больше
@@ -83,9 +100,9 @@ class Softmax(LinearModel):
     @classmethod
     def _act_derivative(cls,s): # производная softmax
         o = cls._act(s)
-        return o*(1.-o) # o*o
+        return o*(1.-o) 
         
-    # https://peterroelants.github.io/posts/cross-entropy-softmax/
+        # https://peterroelants.github.io/posts/cross-entropy-softmax/
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)

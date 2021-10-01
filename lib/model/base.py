@@ -35,11 +35,14 @@ class MLModel:
         self._reset()
         return self
 
-    def predict(self,x): # генерируем выход модели
+    def predict(self,x): 
         assert not(self._weight is None), 'try predict with empty weight'
         return self._predict(x)
 
-    def _predict(self,x):  pass # генерируем выход модели
+    def _predict(self,x): # интерпретация выхода модели 
+        return self._score(x)
+
+    def _score(self,x): pass # генерируем выход модели
 
     def _save(self): # пакуем параметры модели
         return {'weight':self._weight,}
