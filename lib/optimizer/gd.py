@@ -20,7 +20,7 @@ from .regularizator import Regularization
 from .breaker import FitBreakException
 from .breaker import Breaking
 
-from lib.loss.base import EmptyLoss
+from ..loss.base import EmptyLoss
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

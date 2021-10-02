@@ -21,11 +21,14 @@ class BinnaryClassifierScoreThreshold:
     def __init__(self,model):
         self._model = model
 
+    @staticmethod
+    def _optimal_threshold(tpr,fpr,thresholds):
+        return thresholds[ np.argmax( np.abs(tpr-fpr) )  ]
+
     def fit(self,X,target):
         s = self._model.score(X)
         fpr, tpr, thresholds = roc_curve( y_true=target, y_score=s )
-        optimal_threshold_idx = np.argmax( np.abs(tpr-fpr) )
-        self._model.score_threshold = thresholds[optimal_threshold_idx]
+        self._model.score_threshold = self._optimal_threshold(tpr,fpr,thresholds)
         return self._model
 
 
@@ -66,8 +69,9 @@ class ClassifierEstimator:
         
         fpr, tpr, thresholds = roc_curve( y_true=target, y_score=y_score )
         roc_auc = auc(fpr,tpr)
-
-        ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+        optimal_threshold = BinnaryClassifierScoreThreshold._optimal_threshold(tpr,fpr,thresholds)
+        label='area = %0.2f\noptimal threshold = %0.3f' %( roc_auc,optimal_threshold)
+        ax.plot(fpr, tpr, color='darkorange', lw=2, label=label)
         ax.plot([0, 1], [0, 1], color='navy', lw=1, linestyle='--')
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
