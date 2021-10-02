@@ -18,7 +18,7 @@ from .regularizator import Regularization
 # from .regularizator import RegularizationL1
 # from .breaker import EarlyStopping
 from .breaker import FitBreakException
-from .breaker import Breaking
+# from .breaker import Breaking
 
 from ..loss.base import EmptyLoss
 
@@ -26,12 +26,13 @@ from ..loss.base import EmptyLoss
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class BaseGD(ModelOptimimizer):
 
-    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=Breaking()):
+    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[]):
         super().__init__(loss=loss)
         self._lra = lra
         self._breaker = breaker
-        assert (loss!=loss_val), "train loss and validation loss is same object"
+        assert (loss!=loss_val), 'train loss and validation loss is same object'
         self._loss_val = loss_val
+        self._breaker_val = breaker_val
 
     def _adjust_weigth(self,data,lr):
         x,t = data
@@ -49,15 +50,19 @@ class BaseGD(ModelOptimimizer):
         self._adjust_weigth(data_train,lr) # обучаем модель
         self._estimate_epoch(data_train,data_val)
         return self
+    
+    def _check_loss(self):
+        for b in self._breaker: b.check(self._loss)
+        for b in self._breaker_val: b.check(self._loss_val)
+        return self    
 
     def _fit(self,data_train,data_val,n_epoch): 
-        # self._loss.model.reset()
         data_val = data_train if data_val is None else data_val
         epoch = tqdm(range(n_epoch))
         for _ in epoch:
             self._fit_epoch(data_train,data_val)
             epoch.set_postfix({'loss':self._loss.history[-1], 'lr':self._lra.history[-1],})
-            self._breaker.check(self._loss)
+            self._check_loss()
         return self
 
     def fit(self,data_train,data_val=None,n_epoch=2): 

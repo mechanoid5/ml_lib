@@ -2,6 +2,7 @@
 
 Евгений Борисов <esborisov@sevsu.ru>
 
+
 ### модели
 
 - lib.model.base.MLModel - базовый класс
@@ -9,6 +10,7 @@
 - lib.model.linear.LinearClassifier - линейный классификатор
 - lib.model.linear.SLP - однослойная нейросеть (сигмойда)
 - lib.model.linear.Softmax 
+
 
 ### ф-ции потери
 
@@ -22,8 +24,8 @@
 
 - lib.initiator.base.InitiatorModel - базовый класс
 - lib.initiator.linear.InitiatorLinearModel - инициализация линейной модели
-- lib.initiator.linear.UniformInitiatorLinearModel - случайные малые значения равномерно распределенные на ( 0, 0.1 )
-- lib.initiator.linear.NormalInitiatorLinearModel-  случайные малые значения нормально распределенные на ( -0.1 , 0.1 )
+- lib.initiator.linear.UniformInitiatorLinearModel - случайные малые значения равномерно распределенные 
+- lib.initiator.linear.NormalInitiatorLinearModel-  случайные малые значения нормально распределенные 
 
 
 
@@ -52,9 +54,10 @@
 ### прерывание цикла обучения при выполнении условия
 
 - lib.optimizer.breaker.Breaking - базовый класс
-- lib.optimizer.breaker.EarlyStopping - прерывание по достижению порога значения потери
 - lib.optimizer.breaker.FitBreakException - исключение прерывания цикла обучения
-
+- lib.optimizer.breaker.ThresholdBreaking - прерывание по достижению порога значения потери
+- lib.optimizer.breaker.GrowthBreaking - прерывание при росте ф-ции потери
+- lib.optimizer.breaker.DifferenceBreaking -  прерывание при отсутвии существенной разницы в занчениях ф-ции потери
 
 
 ### оценка результатов моделей 

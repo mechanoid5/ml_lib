@@ -18,40 +18,49 @@ class FitBreakException(Exception): pass
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class Breaking: # Bad
     
-    def check(self,loss): return self
-
+    def check(self,loss): 
+        return self
+  
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class EarlyStopping(Breaking): # прерыватель цикла градиентного спуска
+class ThresholdBreaking(Breaking): # прерывание по достижению порога значения ф-ции потери
 
-    def __init__( self, bound=None, min_delta=0., max_delta=None, patience=2 ):
-        self._min_delta=min_delta # минимальное отклонение потери для срабатывания прерывателя
-        self._max_delta=max_delta # максимально допустимый рост потери для срабатывания прерывателя
-        assert patience>1,'patience must be greater than 1'
-        self._patience=patience # глубина истории значений ф-ции потери для сравнения с текущим показателем
-        self._bound = bound # порог значений ф-ции потери для срабатывания прерывателя
-
-    def _check_bound(self,loss): # проверка на достижение порога минимального значения ф-ции потери
-        return False if (self._bound is None) else (loss.history[-1]<self._bound)
-
-    def _check_delta(self,loss): # проверка на достижение минимального изменения значений ф-ции потери
-        return False if (len(loss.history)<self._patience) else ( np.abs(loss.history[-1]-loss.history[-self._patience])<self._min_delta )
-
-    def _check_increase(self,loss): # проверка на возрастание значений ф-ции потери
-        return (
-            False 
-            if ( (len(loss.history)<self._patience) or (self._max_delta is None) )
-            else ( (loss.history[-1]-loss.history[-self._patience])>self._max_delta )
-        )
+    def __init__( self, value ):
+        self._value = value # порог значений ф-ции потери для срабатывания прерывателя
 
     def check(self,loss):
-        if self._check_bound(loss): # достигнут порог значения ф-ции потери 
-            raise FitBreakException('EarlyStopping: loss min value bound has been reached') 
-        if self._check_delta(loss): # изменения значений ф-ции потери минимально 
-            raise FitBreakException('EarlyStopping: value loss min difference has been detected') 
-        if self._check_increase(loss): # рост ф-ции потери
-            raise FitBreakException('EarlyStopping: significant increase in the loss function has been detected') 
+        if (loss.history[-1]<self._value) # достигнут порог значения ф-ции потери 
+            raise FitBreakException('ThresholdBreaking: loss min value has been reached') 
         return self
- 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class GrowthBreaking(Breaking): # прерывание при росте ф-ции потери
+
+    def __init__( self, patience=2, delta=0. ):
+        assert patience>1,'patience must be greater than 1'
+        self._patience = patience # глубина истории значений ф-ции потери для сравнения с текущим показателем
+        self._delta = delta # допустимый прирост ф-ции потери
+
+    def check(self,loss): # проверяем рост ф-ции потери
+        if ( len(loss.history) < self._patience ): return self
+        if ( (loss.history[-1]-loss.history[-self._patience]) > self._delta ):
+            raise FitBreakException('GrowthBreaking: significant increase in the loss function has been detected')
+        return self
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class DifferenceBreaking(Breaking): # прерывание при отсутвии существенной разницы в занчениях ф-ции потери
+
+    def __init__( self, patience=2, delta=0. ):
+        assert patience>1,'patience must be greater than 1'
+        self._patience = patience # глубина истории значений ф-ции потери для сравнения с текущим показателем
+        self._delta = delta # минимальное допустимое изменение ф-ции потери
+
+    def check(self,loss):# проверяем изменения значений ф-ции потери
+        if ( len(loss.history) < self._patience ): return self
+        if ( np.abs(loss.history[-1]-loss.history[-self._patience]) < self._delta ):
+            raise FitBreakException('DifferenceBreaking: loss values do not change')
+        return self
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)
