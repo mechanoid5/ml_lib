@@ -29,10 +29,16 @@ class BaseGD(ModelOptimimizer):
     def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[]):
         super().__init__(loss=loss)
         self._lra = lra
-        self._breaker = breaker
         assert (loss!=loss_val), 'train loss and validation loss is same object'
         self._loss_val = loss_val
+        self._breaker = breaker
         self._breaker_val = breaker_val
+        self._init_breakers()
+
+    def _init_breakers(self): # инициализируем кэш параметров модели
+        for b in self._breaker: b._push_weight(self._loss)
+        for b in self._breaker_val: b._push_weight(self._loss_val) 
+        return self
 
     def _adjust_weigth(self,data,lr):
         x,t = data
@@ -69,9 +75,10 @@ class BaseGD(ModelOptimimizer):
         try:
             self._fit(data_train=data_train,data_val=data_val,n_epoch=n_epoch) 
         except FitBreakException as break_reason:
-            logging.info(break_reason)
-        except Exception as err:
-            logging.error(err)
+            logging.info(break_reason) # возвращаем старые веса
+            self._loss.model.weight = break_reason.weight
+        #except Exception as err:
+        #    logging.error(err)
 
         return self._loss.model
 
