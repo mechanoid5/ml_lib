@@ -78,7 +78,7 @@ class LinearClassifier(LinearModel): # линейный классификато
     def score_threshold(self,value): self._score_threshold = value
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class SLP(LinearClassifier): # однослойная нейросеть
+class SLP(LinearClassifier): # однослойная нейросеть, сигмоид {0,1}
 
     @staticmethod
     def _act(s): 
@@ -88,6 +88,16 @@ class SLP(LinearClassifier): # однослойная нейросеть
     def _act_derivative(cls,s): # sigmoid derivative
         o = cls._act(s)
         return o*(1.-o)
+
+class SLP_BPS(LinearClassifier): # однослойная нейросеть, биполярный сигмоид {-1,1}
+
+    @staticmethod
+    def _act(s): 
+        return np.tanh(s)
+    
+    @classmethod
+    def _act_derivative(cls,s): 
+        return 1./np.square(np.cosh(s))
 
 
 
