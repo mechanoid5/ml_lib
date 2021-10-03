@@ -50,7 +50,6 @@ class LinearModel(MLModel): # линейная модель
     def shape(self): return self._weight.shape
 
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class LinearClassifier(LinearModel): # линейный классификатор
 

@@ -28,7 +28,7 @@ class ThresholdBreaking(Breaking): # прерывание по достижен�
         self._value = value # порог значений ф-ции потери для срабатывания прерывателя
 
     def check(self,loss):
-        if (loss.history[-1]<self._value) # достигнут порог значения ф-ции потери 
+        if (loss.history[-1]<self._value): # достигнут порог значения ф-ции потери 
             raise FitBreakException('ThresholdBreaking: loss min value has been reached') 
         return self
 

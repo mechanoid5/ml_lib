@@ -78,8 +78,8 @@ class BaseGD(ModelOptimimizer):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class GD(BaseGD):
 
-    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
-        super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker)
+    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[],regul=Regularization(1.),momentum=0.):
+        super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker,breaker_val=breaker_val)
         self._regularizator = regul # регуляризатор
         self._dweight = 0. # значения изменения весов на пред. шаге для расчёта момента
         self._momentum = momentum # коэффициент момента
@@ -102,8 +102,8 @@ class GD(BaseGD):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class SGD(GD):
     
-    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=Breaking(),regul=Regularization(1.),momentum=0.):
-        super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker,regul=regul,momentum=momentum)
+    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[],regul=Regularization(1.),momentum=0.):
+        super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker,breaker_val=breaker_val,regul=regul,momentum=momentum)
         self._batch_size=0
         self._target_is_indices=False
     
