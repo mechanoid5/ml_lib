@@ -1,4 +1,4 @@
-библиотека базовых методов машинного обучения
+библиотека линейных методов машинного обучения
 
 Евгений Борисов <esborisov@sevsu.ru>
 
@@ -16,7 +16,9 @@
 
 - lib.loss.base.Loss - базовый класс
 - lib.loss.msqe.MSQE - среднее квадратичное отклонение
-- lib.loss.crossentropy.CCE - категориальная кроссэнтропия
+- lib.loss.cce.CCE - категориальная кроссэнтропия
+- lib.loss.binary.bce.BCE - кроссэнтропия
+- lib.loss.binary.hinge.Hinge  
 - lib.loss.ranker.PairRankerLoss - оценка разницы скоров для задачи парного ранжирования
 
 
