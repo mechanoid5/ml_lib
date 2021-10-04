@@ -13,42 +13,27 @@ import numpy as np
 
 from .base import Loss
 
+class LogisticLoss(Loss):  # для бинарной класcификации {-1,1}
 
-class PairRankerLogisticLoss(Loss):
-    
     def __init__(self,model,sigma=.95):
         super().__init__(model=model)
         self._sigma = sigma
-   
-    def estimate(self,data,pair):
-        first,second = pair[:,0],pair[:,1]
-        s = self._estimate(
-            self._model.score(data[first,:]), 
-            self._model.score(data[second,:]), 
-        )    
-        self._history.append(s)
-        return s
 
-    def _estimate(self,first_score,second_score): 
-        # минимизация количества отрицательный "отступов", 
-        # т.е. пар у которых скор второго больше скора первого
-        margin = first_score - second_score
+    def _estimate(self,output,target):
+        margin = target - output
         s = 1. + np.exp( -self._sigma * margin )
         with np.errstate(divide='ignore',invalid='ignore',):
             r = np.where( s>0, np.log(s), 0. )
         return r.sum()/len(r)
 
-    def gradient(self,data,pair):
-        first,second = pair[:,0],pair[:,1]
-        return self._gradient( data[first,:], data[second,:], )
-            
-    def _gradient(self,x_first,x_second):
-        margin = self._model.score(x_first) - self._model.score(x_second)
-        dmargin = self._model._partial(x_first) - self._model._partial(x_second)
+    def _gradient(self,input_data,target):
+        margin = target - self._model.score(input_data)
+        dmargin = target[:,np.newaxis] - self._model._partial(input_data) 
         d = 1. + np.exp( self._sigma * margin )[:,np.newaxis]
         with np.errstate(divide='ignore',invalid='ignore',):
             g = np.where( d!=0, (-self._sigma/d)*dmargin, 0. )
         return self._norm( g.sum(axis=0)/len(g))
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if __name__ == '__main__': sys.exit(0)

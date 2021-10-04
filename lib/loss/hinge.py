@@ -13,7 +13,7 @@ import numpy as np
 
 from ..base import Loss
 
-class Hinge(Loss):  # для бинарной класcификации {-1,1}
+class HingeLoss(Loss):  # для бинарной класcификации {-1,1}
 
     def _estimate(self,output,target):
         l = 1. - target*output

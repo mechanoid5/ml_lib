@@ -17,9 +17,10 @@
 - lib.loss.base.Loss - базовый класс
 - lib.loss.msqe.MSQE - среднее квадратичное отклонение
 - lib.loss.cce.CCE - категориальная кроссэнтропия
-- lib.loss.binary.bce.BCE - кроссэнтропия
-- lib.loss.binary.hinge.Hinge  
-- lib.loss.ranker.PairRankerLoss - оценка разницы скоров для задачи парного ранжирования
+- lib.loss.logistic.LogisticLoss 
+- lib.loss.bce.BCE - кроссэнтропия
+- lib.loss.hinge.HingeLoss  
+- lib.loss.ranker.PairRankerLogisticLoss - оценка разницы скоров для задачи парного ранжирования
 
 
 ### инициализация параметров моделей
