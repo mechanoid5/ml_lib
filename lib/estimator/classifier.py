@@ -83,9 +83,9 @@ class ClassifierEstimator:
         fpr, tpr, thresholds = roc_curve( y_true=target_score, y_score=score )
         roc_auc = auc(fpr,tpr)
         opt_trs = BinnaryClassifierScoreThreshold._optimal_threshold(tpr,fpr,thresholds)
-        p = labels[ (s>opt_trs).astype(int) ]
+        p = labels[ (score>opt_trs).astype(int) ]
         print( f'score threshold:{opt_trs}\n')
-        print( classification_report(t,p))
+        print( classification_report(target_score,p))
         cls._plot_roc_auc(ax,fpr,tpr,roc_auc,opt_trs,1)
 
 

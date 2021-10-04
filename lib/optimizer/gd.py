@@ -40,37 +40,6 @@ class BaseGD(ModelOptimimizer):
         for b in self._breaker_val: b._push_weight(self._loss_val) 
         return self
 
-    def _adjust_weigth(self,data,lr):
-        x,t = data
-        d_loss = self._loss.gradient(x,t)
-        self._loss.model.weight  = self._loss.model.weight - lr*d_loss
-        return self
-    
-    def _estimate_epoch(self,data_train,data_val):
-        self._loss.estimate(data_train[0],data_train[1])
-        self._loss_val.estimate(data_val[0],data_val[1])
-        return self
-
-    def _fit_epoch(self,data_train,data_val,): 
-        lr = self._lra.next()
-        self._adjust_weigth(data_train,lr) # обучаем модель
-        self._estimate_epoch(data_train,data_val)
-        return self
-    
-    def _check_loss(self):
-        for b in self._breaker: b.check(self._loss)
-        for b in self._breaker_val: b.check(self._loss_val)
-        return self    
-
-    def _fit(self,data_train,data_val,n_epoch): 
-        data_val = data_train if data_val is None else data_val
-        epoch = tqdm(range(n_epoch))
-        for _ in epoch:
-            self._fit_epoch(data_train,data_val)
-            epoch.set_postfix({'loss':self._loss.history[-1], 'lr':self._lra.history[-1],})
-            self._check_loss()
-        return self
-
     def fit(self,data_train,data_val=None,n_epoch=2): 
         try:
             self._fit(data_train=data_train,data_val=data_val,n_epoch=n_epoch) 
@@ -82,6 +51,44 @@ class BaseGD(ModelOptimimizer):
 
         return self._loss.model
 
+    def _fit(self,data_train,data_val,n_epoch): 
+        data_val = data_train if data_val is None else data_val
+        epoch = tqdm(range(n_epoch))
+        for _ in epoch:
+            lr = self._lra.next()
+            self._fit_epoch(data_train,lr)
+            self._estimate_epoch(data_train,data_val)
+            epoch.set_postfix({'loss':self._loss.history[-1], 'lr':self._lra.history[-1],})
+            self._check_loss()
+        return self
+
+
+    def _fit_epoch(self,data,lr): 
+        self._adjust_weigth(data,lr) # обучаем модель
+        return self
+
+    def _adjust_weigth(self,data,lr):
+        dw = self._weight_delta(data,lr)
+        self._loss.model.weight  = self._loss.model.weight - dw
+        return self
+    
+    def _weight_delta(self,data,lr):
+        x,t = data
+        d_loss = self._loss.gradient(x,t)
+        return lr*d_loss
+
+    def _estimate_epoch(self,data_train,data_val):
+        self._loss.estimate(data_train[0],data_train[1])
+        self._loss_val.estimate(data_val[0],data_val[1])
+        return self
+
+      
+    def _check_loss(self):
+        for b in self._breaker: b.check(self._loss)
+        for b in self._breaker_val: b.check(self._loss_val)
+        return self    
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class GD(BaseGD):
 
@@ -90,21 +97,23 @@ class GD(BaseGD):
         self._regularizator = regul # регуляризатор
         self._dweight = 0. # значения изменения весов на пред. шаге для расчёта момента
         self._momentum = momentum # коэффициент момента
-    
+ 
     def _adjust_weigth(self,data,lr):
+        dw = self._weight_delta(data,lr)
+        self._loss.model.weight  = self._loss.model.weight - dw
+        self._dweight = dw
+        return self
+
+    def _weight_delta(self,data,lr):
         x,t = data
         d_loss = self._loss.gradient(x,t) # значение градиента ф-ции потери
-        dweight =(
+        return (
                 lr*( 
                     d_loss # значение градиента ф-ции потери
                     * self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
                     ) 
                     + self._momentum * self._dweight # добавка момента
                 )
-        self._loss.model.weight  = ( self._loss.model.weight - dweight )
-        self._dweight = dweight
-
-        return self
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class SGD(GD):
@@ -125,9 +134,9 @@ class SGD(GD):
         for idx in np.array_split(rng.permutation(n_samples), batch_count ):
             yield self._select_data(data,idx) 
 
-    def _adjust_weigth(self,data,lr):
+    def _fit_epoch(self,data,lr): 
         for batch_data in self._get_batch(data):
-            super()._adjust_weigth( batch_data,lr) # обучаем модель на батче
+            super()._fit_epoch( batch_data,lr) # обучаем модель на батче
         return self
   
     def fit(self, data_train, batch_size, data_val=None, n_epoch=2, target_is_indices=False ):
@@ -136,6 +145,16 @@ class SGD(GD):
         self._batch_size=batch_size
         self._target_is_indices=target_is_indices
         return super().fit(data_train=data_train, data_val=data_val, n_epoch=n_epoch)
+
+
+
+
+
+
+
+
+
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
