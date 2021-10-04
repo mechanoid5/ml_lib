@@ -11,7 +11,7 @@ import logging
 import numpy as np
 # import numpy.random as rng
 
-from ..base import Loss
+from .base import Loss
 
 class HingeLoss(Loss):  # для бинарной класcификации {-1,1}
 
