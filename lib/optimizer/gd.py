@@ -110,7 +110,7 @@ class GD(BaseGD):
         return (
                 lr*( 
                     d_loss # значение градиента ф-ции потери
-                    * self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
+                    + self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
                     ) 
                     + self._momentum * self._dweight # добавка момента
                 )
@@ -150,7 +150,49 @@ class SGD(GD):
 
 
 
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class Adam(SGD):
+    
+    def __init__(
+        self,
+        loss,
+        loss_val=EmptyLoss(),
+        lra=ConstLRA(.1),
+        breaker=[],
+        breaker_val=[],
+        regul=Regularization(1.),
+        momentum=0.,
+        a=.999,
+        b=.99,
+    ):
+        super().__init__(
+            loss=loss,
+            loss_val=loss_val,
+            lra=lra,
+            breaker=breaker,
+            breaker_val=breaker_val,
+            regul=regul,
+            momentum=momentum,
+        )
+        self._S = .0
+        self._D = .0
+        self._a = a
+        self._b = b
+        
+        
+    def _weight_delta(self,data,lr):
+        x,t = data
+        d_loss = self._loss.gradient(x,t) # значение градиента ф-ции потери
+        self._S = self._a*self._S+(1.-self._a)* np.square(d_loss)
+        self._D = self._b*self._D+(1-self._b)*d_loss
+        g = (self._D/(1.-self._b))*np.sqrt((1.-self._a)/self._S)
+        return (
+            lr*( 
+                g # значение градиента ф-ции потери
+                + self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
+                ) 
+                + self._momentum * self._dweight # добавка момента
+            )
 
 
 
