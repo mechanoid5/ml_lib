@@ -34,6 +34,8 @@
 
 ### методы оптимизации ф-ций потери
 
+[http://mechanoid.su/neural-net-backprop2.html](http://mechanoid.su/neural-net-backprop2.html)
+
 - lib.optimizer.base.ModelOptimimizer - базовый класс
 - lib.optimizer.gd.BaseGD - "ванильный" градиентный спуск
 - lib.optimizer.gd.GD - градиентный спуск с регуляризацией и моментом
