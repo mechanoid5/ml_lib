@@ -11,13 +11,25 @@ import logging
 import numpy as np
 # import numpy.random as rng
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class Loss:
 
-    def __init__(self,model):
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class EmptyLoss:
+    
+    # def __init__(self,model=None,normalize_gradient=True): pass
+
+    def estimate(self,input_data,target): return .0
+    
+    def gradient(self,input_data,target): return .0
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+class Loss(EmptyLoss):
+
+    def __init__(self,model,normalize_gradient=True):
+        super().__init__()
         assert not(model is None), 'try estimate empty model'
         self._model = model
         self._history = []
+        self._normalize_gradient = normalize_gradient
 
     def estimate(self,input_data,target):
         s = self._estimate(self._model.score(input_data), target)
@@ -39,21 +51,10 @@ class Loss:
     def history(self): 
         return self._history
 
-    @staticmethod
-    def _norm(x):
+    def _norm(self,x):
+        if not self._normalize_gradient: return x
         amax = np.abs(x).max()
         return x if amax==0. else x/amax
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-class EmptyLoss(Loss):
-
-    def __init__(self): pass
-
-    def estimate(self,input_data,target): pass
-    
-    def gradient(self,input_data,target): pass
-
 
 
 

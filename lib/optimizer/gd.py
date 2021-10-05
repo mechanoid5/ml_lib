@@ -26,12 +26,13 @@ from ..loss.base import EmptyLoss
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class BaseGD(ModelOptimimizer):
 
-    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[]):
+    def __init__(self,loss,loss_val=None,lra=ConstLRA(.1),breaker=[],breaker_val=[]):
         super().__init__(loss=loss)
         self._lra = lra
         assert (loss!=loss_val), 'train loss and validation loss is same object'
-        self._loss_val = loss_val
+        self._loss_val = EmptyLoss() if (loss_val is None) else loss_val
         self._breaker = breaker
+        assert not(len(breaker_val)>0) or (not(loss_val is None)), 'Breaker without Loss on validation'
         self._breaker_val = breaker_val
         self._init_breakers()
 
@@ -75,7 +76,7 @@ class BaseGD(ModelOptimimizer):
     def _weight_delta(self,data,lr):
         x,t = data
         d_loss = self._loss.gradient(x,t)
-        return lr*d_loss
+        return d_loss*lr
 
     def _estimate_epoch(self,data_train,data_val):
         self._loss.estimate(data_train[0],data_train[1])
@@ -92,7 +93,7 @@ class BaseGD(ModelOptimimizer):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class GD(BaseGD):
 
-    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[],regul=Regularization(1.),momentum=0.):
+    def __init__(self,loss,loss_val=None,lra=ConstLRA(.1),breaker=[],breaker_val=[],regul=Regularization(1.),momentum=0.):
         super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker,breaker_val=breaker_val)
         self._regularizator = regul # регуляризатор
         self._dweight = 0. # значения изменения весов на пред. шаге для расчёта момента
@@ -108,17 +109,17 @@ class GD(BaseGD):
         x,t = data
         d_loss = self._loss.gradient(x,t) # значение градиента ф-ции потери
         return (
-                lr*( 
+                ( 
                     d_loss # значение градиента ф-ции потери
                     + self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
                     ) 
-                    + self._momentum * self._dweight # добавка момента
-                )
+                    + self._dweight * self._momentum  # добавка момента
+                )*lr
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 class SGD(GD):
     
-    def __init__(self,loss,loss_val=EmptyLoss(),lra=ConstLRA(.1),breaker=[],breaker_val=[],regul=Regularization(1.),momentum=0.):
+    def __init__(self,loss,loss_val=None,lra=ConstLRA(.1),breaker=[],breaker_val=[],regul=Regularization(1.),momentum=0.):
         super().__init__(loss=loss,loss_val=loss_val,lra=lra,breaker=breaker,breaker_val=breaker_val,regul=regul,momentum=momentum)
         self._batch_size=0
         self._target_is_indices=False
@@ -156,7 +157,7 @@ class Adam(SGD):
     def __init__(
         self,
         loss,
-        loss_val=EmptyLoss(),
+        loss_val=None,
         lra=ConstLRA(.1),
         breaker=[],
         breaker_val=[],
@@ -183,16 +184,16 @@ class Adam(SGD):
     def _weight_delta(self,data,lr):
         x,t = data
         d_loss = self._loss.gradient(x,t) # значение градиента ф-ции потери
-        self._S = self._a*self._S+(1.-self._a)* np.square(d_loss)
-        self._D = self._b*self._D+(1-self._b)*d_loss
+        self._S = self._S * self._a + (d_loss*d_loss)*(1.-self._a)
+        self._D = self._D * self._b + d_loss * (1-self._b)
         g = (self._D/(1.-self._b))*np.sqrt((1.-self._a)/self._S)
         return (
-            lr*( 
-                g # значение градиента ф-ции потери
-                + self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
+                ( 
+                    g # значение градиента ф-ции потери
+                    + self._regularizator.transform(self._loss.model.weight) # добавка регуляризатора
                 ) 
-                + self._momentum * self._dweight # добавка момента
-            )
+                + self._dweight * self._momentum  # добавка момента
+            )*lr
 
 
 

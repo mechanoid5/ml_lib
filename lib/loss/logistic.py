@@ -15,8 +15,8 @@ from .base import Loss
 
 class LogisticLoss(Loss):  # для бинарной класcификации {-1,1}
 
-    def __init__(self,model,sigma=.95):
-        super().__init__(model=model)
+    def __init__(self,model,normalize_gradient=True,sigma=.95):
+        super().__init__(model=model,normalize_gradient=normalize_gradient)
         self._sigma = sigma
 
     def _estimate(self,output,target):

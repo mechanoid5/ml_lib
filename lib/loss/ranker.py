@@ -13,11 +13,10 @@ import numpy as np
 
 from .base import Loss
 
-
 class PairRankerLogisticLoss(Loss):
     
-    def __init__(self,model,sigma=.95):
-        super().__init__(model=model)
+    def __init__(self,model,sigma=.95,normalize_gradient=True):
+        super().__init__(model=model,normalize_gradient=normalize_gradient)
         self._sigma = sigma
    
     def estimate(self,data,pair):
